@@ -18,6 +18,7 @@ int j = 0;
 void printResult(HUSKYLENSResult result);
 uint8_t state = 0, menu = 0, menuTemp = 0;
 int isThere[n] = {0};
+unsigned long previousMillis = 0;  // will store last time LED was updated
 byte customChar[] = {
   B10000,
   B11000,
@@ -55,6 +56,7 @@ void setup() {
 void loop() {
   //Serial.println(String()+btnUp+F(" : ")+btnDown+F(" : ")+j+F(" : ")+n);
   //checkHusky();
+  const long interval = 2000;  // interval at which to blink (milliseconds)
   j = 0;
   lcd.clear();
   lcd.setCursor(0,1);
@@ -135,6 +137,74 @@ void loop() {
       }
     }
     if(btnOk == 0){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Status : ");
+      delay(500);
+      if(isThere[j] == 0){
+        lcd.setCursor(0,1);
+        lcd.print("Bisa Masuk");
+        delay(1000);
+        lcd.clear();
+        bool out = 0;
+        uint8_t msg = 1;
+        while(out == 0){
+          btnOk = digitalRead(tombol3); 
+          unsigned long currentMillis = millis();
+          if (currentMillis - previousMillis >= interval) {
+            previousMillis = currentMillis;
+            if(msg == 1){
+              msg = 2;
+              lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print("Paket ");
+              lcd.setCursor(6,0);
+              lcd.print(names[j]);
+              lcd.setCursor(0,1);
+              lcd.print("Loker nomor : ");
+              lcd.setCursor(14,1);
+              lcd.print(j+1);
+            } else {
+              msg = 1;
+              lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print("Tekan OK untuk");
+              lcd.setCursor(0,1);
+              lcd.print("mengunci loker.");
+            }
+          }
+          if(btnOk == 0){
+            delay(500);
+            out = 1;
+          }
+        }
+        isThere[j] = 1;
+      } else if(isThere[j] == 1){
+        lcd.setCursor(0,1);
+        lcd.print("Tidak Bisa Masuk");
+        delay(1000);
+        lcd.clear();
+        for(int i = 0; i < 3; i++){
+          lcd.setCursor(0,0);
+          lcd.print("Paket ");
+          lcd.setCursor(6,0);
+          lcd.print(names[j]);
+          lcd.setCursor(0,1);
+          lcd.print("Tidak Bisa Masuk");
+          delay(1000);
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Penerima Belum");
+          lcd.setCursor(0,1);
+          lcd.print("Ambil paket");
+          delay(1000);
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("sebelumnya");
+          delay(1000);
+          lcd.clear();
+        } 
+      }
       delay(500);
       menu = 0; 
       lcd.clear();
