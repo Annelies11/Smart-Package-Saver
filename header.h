@@ -2,7 +2,7 @@
 #define tombol2 5
 #define tombol3 6
 
-String names[] = {"Zahra", "Anggita", "Pak Ivan", "Om Aris", "Abel"}; 
+String names[] = {"Zahra", "Anggita", "Pak Ivan", "Nadya", "Abel"}; 
 const int n = sizeof(names) / sizeof(names[0]);
 int btnUp, btnDown, btnOk;
 int j = 0; 

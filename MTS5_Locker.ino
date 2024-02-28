@@ -252,146 +252,49 @@ void loop() {
               lcd.print("Tidak Terdeteksi");
             }
             else {
-                while (huskylens.available())
-                  {                   
-                    HUSKYLENSResult result = huskylens.read();
-                    Serial.println(result.ID);
-                    
-                    if(result.ID == 0){
-                      if(state != 2){
-                      lcd.setCursor(0,1);
-                      lcd.print("                ");
-                      state = 2;
-                    }
-                      lcd.setCursor(0,1);
-                      lcd.print("Tidak Dikenal");                      
-                    } else {
-                      if(state != 3){
-                        lcd.setCursor(0,1);
-                        lcd.print("                ");
-                        state = 3;
-                      }
-                      lcd.setCursor(0,1);
-                      lcd.print(names[result.ID-1]);
-                      isThere[result.ID-1] = 0;
-                      delay(2000);
-                      lcd.clear();
-                      lcd.setCursor(0,0);
-                      lcd.print("Silakan ambil");
-                      lcd.setCursor(0,1);
-                      lcd.print("                ");
-                      delay(2000);
-                      lcd.clear();   
-                      face = 0;
-                      menu = 0;
-                    }
-                    if(face == 0){
-                      break;
-                    }
-                    
-                  }    
-            }
-        }        
-        if(btnOk == 0){
-          delay(500);
-          menu = 0; 
-          lcd.clear();
+              while (huskylens.available()) {
+                HUSKYLENSResult result = huskylens.read();
+                Serial.println(result.ID);
+                if(result.ID == 0){
+                  if(state != 2){
+                    lcd.setCursor(0,1);
+                    lcd.print("                ");
+                    state = 2;
+                  }
+                  lcd.setCursor(0,1);
+                  lcd.print("Tidak Dikenal");                      
+                } else {
+                  if(state != 3){
+                    lcd.setCursor(0,1);
+                    lcd.print("                ");
+                    state = 3;
+                  }
+                  lcd.setCursor(0,1);
+                  lcd.print(names[result.ID-1]);
+                  isThere[result.ID-1] = 0;
+                  delay(2000);
+                  lcd.clear();
+                  lcd.setCursor(0,0);
+                  lcd.print("Silakan ambil");
+                  lcd.setCursor(0,1);
+                  lcd.print("                ");
+                  delay(2000);
+                  lcd.clear();   
+                  face = 0;
+                  menu = 0;
+                }
+                if(face == 0){
+                  break;
+                }   
+              }    
+              }
+          }        
+          if(btnOk == 0){
+            delay(500);
+            menu = 0; 
+            lcd.clear();
+          }  
         }
-          
       }
-    
-  }
-  }
-}
-
-void checkHusky(){
-  if (!huskylens.request()) Serial.println(F("Sambungan Gagal!"));
-    else if(!huskylens.isLearned()) Serial.println(F("Belum ada training data!"));
-    else if(!huskylens.available()){
-      Serial.println(F("Tidak ada objek yang tertangkap!"));
     }
 }
-//
-//void showUser(){
-//  if(huskylens.available()){
-//    HUSKYLENSResult result = huskylens.read();
-//    switch (result.ID){
-//      case 1:
-//      lcd.setCursor(0,1);
-//      lcd.print("Elon Musk");
-//      break;
-//      case 2:
-//      lcd.setCursor(0,1);
-//      lcd.print("Jack Ma");
-//      break;
-//      default:
-//      lcd.setCursor(0,1);
-//      lcd.print("Unknown");
-//      break;
-//    }
-//    if(state != result.ID){
-//      lcd.setCursor(0,1);
-//      lcd.print("                ");
-//    }
-//    state = result.ID;
-//  }
-//}
-
-//void printUser(){
-//  if(btnUp == 0){
-//    if(j == n-1){
-//      lcd.setCursor(0,0);
-//      lcd.print("The End Of List");
-//    } else {
-//      j++;  
-//      delay(500);
-//      lcd.clear();
-//      lcd.setCursor(0,0);
-//      lcd.print("Pilih Penerima :");
-//    }
-//  }
-//  if(btnDown == 0){
-//    if(j <= 0){
-//      lcd.clear();
-//      lcd.setCursor(0,0);
-//      lcd.print("The End Of List");
-//    } else {
-//      j--;  
-//      delay(500);
-//      lcd.clear();
-//      lcd.setCursor(0,0);
-//      lcd.print("Pilih Penerima :");
-//    }
-//  lcd.setCursor(0,1);
-//  lcd.print(String()+(j+1)+F(". ")+names[j]);
-//  if(btnOk == 0){
-//    lcd.setCursor(14,1);
-//    lcd.print("OK");
-//  } if(btnOk == 1) {
-//    lcd.setCursor(14,1);
-//    lcd.print("  ");
-//  }
-//}
-//}
-//
-//void printResult(HUSKYLENSResult result){
-//    if (result.command == COMMAND_RETURN_BLOCK){
-//        Serial.println(String()+F(",ID=")+result.ID);
-//    }
-//    else if (result.command == COMMAND_RETURN_ARROW){
-//        Serial.println(String()+F(",ID=")+result.ID);
-//    }
-//    else{
-//        Serial.println("Object unknown!");
-//    }
-//}
-
-//    else
-//    {
-//        Serial.println(F("###########"));
-//        while (huskylens.available())
-//        {
-//            HUSKYLENSResult result = huskylens.read();
-//            printResult(result);
-//        }    
-//    }
