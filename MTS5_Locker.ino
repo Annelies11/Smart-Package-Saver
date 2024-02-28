@@ -2,34 +2,12 @@
 #include "SoftwareSerial.h"
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
-#define tombol1 4
-#define tombol2 5
-#define tombol3 6
-
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 HUSKYLENS huskylens;
 SoftwareSerial mySerial(10, 11); // RX, TX
 //HUSKYLENS green line >> Pin 10; blue line >> Pin 11
-  
-String names[] = {"Zahra", "Anggita", "Pak Ivan", "Om Aris", "Abel"}; 
-const int n = sizeof(names) / sizeof(names[0]);
-int btnUp, btnDown, btnOk;
-int j = 0; 
-void printResult(HUSKYLENSResult result);
-uint8_t state = 0, menu = 0, menuTemp = 0;
-int isThere[n] = {0};
-unsigned long previousMillis = 0;  // will store last time LED was updated
-byte customChar[] = {
-  B10000,
-  B11000,
-  B11100,
-  B11110,
-  B11111,
-  B11110,
-  B11000,
-  B10000
-};
 
+#include "header.h"
 
 void setup() {
   lcd.init();                      // initialize the lcd 
@@ -56,6 +34,7 @@ void setup() {
 void loop() {
   //Serial.println(String()+btnUp+F(" : ")+btnDown+F(" : ")+j+F(" : ")+n);
   //checkHusky();
+  first = 0;
   const long interval = 2000;  // interval at which to blink (milliseconds)
   j = 0;
   lcd.clear();
@@ -216,18 +195,113 @@ void loop() {
   //Menu Penerima
   while(menu == 2){
     btnOk = digitalRead(tombol3);
-    lcd.setCursor(0,1);
-    lcd.print("Menu Penerima");
-    if(btnOk == 0){
-      delay(500);
-      menu = 0; 
-      lcd.clear();
-    }
+    uint8_t msg = 1;
+    previousMillis = 0;
+    while (!huskylens.begin(mySerial)){
+      btnOk = digitalRead(tombol3); 
+      unsigned long currentMillis = millis();
+      if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+            if(msg == 1){
+              msg = 2;
+              lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print("Huskylens tidak");
+              lcd.setCursor(0,1);
+              lcd.print("terdeteksi");  
+            } else {
+              msg = 1;
+              lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print("Sambungkan Husky");
+              lcd.setCursor(0,1);
+              lcd.print("lens sekarang."); 
+            }
+          }
+          if(btnOk == 0){
+          delay(500);
+          menu = 0;
+          first = 0; 
+          break;
+          lcd.clear();
+          }
+      }
+      if(huskylens.begin(mySerial)){
+        if(first == 0){
+          lcd.clear();
+          first = 1;
+        } else {
+          face = 1;
+          lcd.setCursor(0,0);
+          lcd.print("Kamera Aktif");
+          delay(1000); 
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Hadap ke kamera");
+          while(face == 1){
+            if (!huskylens.request()) Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
+            else if(!huskylens.isLearned()) Serial.println(F("Nothing learned, press learn button on HUSKYLENS to learn one!"));
+            else if(!huskylens.available()){
+              Serial.println(F("No block or arrow appears on the screen!"));
+              if(state != 1){
+                state = 1;
+                lcd.setCursor(0,1);
+                lcd.print("                ");  
+              }   
+              lcd.setCursor(0,1);
+              lcd.print("Tidak Terdeteksi");
+            }
+            else {
+                while (huskylens.available())
+                  {                   
+                    HUSKYLENSResult result = huskylens.read();
+                    Serial.println(result.ID);
+                    
+                    if(result.ID == 0){
+                      if(state != 2){
+                      lcd.setCursor(0,1);
+                      lcd.print("                ");
+                      state = 2;
+                    }
+                      lcd.setCursor(0,1);
+                      lcd.print("Tidak Dikenal");                      
+                    } else {
+                      if(state != 3){
+                        lcd.setCursor(0,1);
+                        lcd.print("                ");
+                        state = 3;
+                      }
+                      lcd.setCursor(0,1);
+                      lcd.print(names[result.ID-1]);
+                      isThere[result.ID-1] = 0;
+                      delay(2000);
+                      lcd.clear();
+                      lcd.setCursor(0,0);
+                      lcd.print("Silakan ambil");
+                      lcd.setCursor(0,1);
+                      lcd.print("                ");
+                      delay(2000);
+                      lcd.clear();   
+                      face = 0;
+                      menu = 0;
+                    }
+                    if(face == 0){
+                      break;
+                    }
+                    
+                  }    
+            }
+        }        
+        if(btnOk == 0){
+          delay(500);
+          menu = 0; 
+          lcd.clear();
+        }
+          
+      }
+    
   }
-  
-  
-  
-//  showUser();
+  }
 }
 
 void checkHusky(){
@@ -237,80 +311,80 @@ void checkHusky(){
       Serial.println(F("Tidak ada objek yang tertangkap!"));
     }
 }
+//
+//void showUser(){
+//  if(huskylens.available()){
+//    HUSKYLENSResult result = huskylens.read();
+//    switch (result.ID){
+//      case 1:
+//      lcd.setCursor(0,1);
+//      lcd.print("Elon Musk");
+//      break;
+//      case 2:
+//      lcd.setCursor(0,1);
+//      lcd.print("Jack Ma");
+//      break;
+//      default:
+//      lcd.setCursor(0,1);
+//      lcd.print("Unknown");
+//      break;
+//    }
+//    if(state != result.ID){
+//      lcd.setCursor(0,1);
+//      lcd.print("                ");
+//    }
+//    state = result.ID;
+//  }
+//}
 
-void showUser(){
-  if(huskylens.available()){
-    HUSKYLENSResult result = huskylens.read();
-    switch (result.ID){
-      case 1:
-      lcd.setCursor(0,1);
-      lcd.print("Elon Musk");
-      break;
-      case 2:
-      lcd.setCursor(0,1);
-      lcd.print("Jack Ma");
-      break;
-      default:
-      lcd.setCursor(0,1);
-      lcd.print("Unknown");
-      break;
-    }
-    if(state != result.ID){
-      lcd.setCursor(0,1);
-      lcd.print("                ");
-    }
-    state = result.ID;
-  }
-}
-
-void printUser(){
-  if(btnUp == 0){
-    if(j == n-1){
-      lcd.setCursor(0,0);
-      lcd.print("The End Of List");
-    } else {
-      j++;  
-      delay(500);
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Pilih Penerima :");
-    }
-  }
-  if(btnDown == 0){
-    if(j <= 0){
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("The End Of List");
-    } else {
-      j--;  
-      delay(500);
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Pilih Penerima :");
-    }
-  lcd.setCursor(0,1);
-  lcd.print(String()+(j+1)+F(". ")+names[j]);
-  if(btnOk == 0){
-    lcd.setCursor(14,1);
-    lcd.print("OK");
-  } if(btnOk == 1) {
-    lcd.setCursor(14,1);
-    lcd.print("  ");
-  }
-}
-}
-
-void printResult(HUSKYLENSResult result){
-    if (result.command == COMMAND_RETURN_BLOCK){
-        Serial.println(String()+F(",ID=")+result.ID);
-    }
-    else if (result.command == COMMAND_RETURN_ARROW){
-        Serial.println(String()+F(",ID=")+result.ID);
-    }
-    else{
-        Serial.println("Object unknown!");
-    }
-}
+//void printUser(){
+//  if(btnUp == 0){
+//    if(j == n-1){
+//      lcd.setCursor(0,0);
+//      lcd.print("The End Of List");
+//    } else {
+//      j++;  
+//      delay(500);
+//      lcd.clear();
+//      lcd.setCursor(0,0);
+//      lcd.print("Pilih Penerima :");
+//    }
+//  }
+//  if(btnDown == 0){
+//    if(j <= 0){
+//      lcd.clear();
+//      lcd.setCursor(0,0);
+//      lcd.print("The End Of List");
+//    } else {
+//      j--;  
+//      delay(500);
+//      lcd.clear();
+//      lcd.setCursor(0,0);
+//      lcd.print("Pilih Penerima :");
+//    }
+//  lcd.setCursor(0,1);
+//  lcd.print(String()+(j+1)+F(". ")+names[j]);
+//  if(btnOk == 0){
+//    lcd.setCursor(14,1);
+//    lcd.print("OK");
+//  } if(btnOk == 1) {
+//    lcd.setCursor(14,1);
+//    lcd.print("  ");
+//  }
+//}
+//}
+//
+//void printResult(HUSKYLENSResult result){
+//    if (result.command == COMMAND_RETURN_BLOCK){
+//        Serial.println(String()+F(",ID=")+result.ID);
+//    }
+//    else if (result.command == COMMAND_RETURN_ARROW){
+//        Serial.println(String()+F(",ID=")+result.ID);
+//    }
+//    else{
+//        Serial.println("Object unknown!");
+//    }
+//}
 
 //    else
 //    {
