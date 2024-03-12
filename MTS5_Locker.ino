@@ -20,6 +20,10 @@ void setup() {
 //  lcd.print("Pilih Penerima :");
   mySerial.begin(9600);
   lcd.createChar(0, customChar);
+  for(int i = 0; i < n; i++){
+    pinMode(loker[i], OUTPUT);
+    digitalWrite(loker[i], HIGH);
+  }
   
 //  while (!huskylens.begin(mySerial))
 //    {
@@ -58,18 +62,23 @@ void loop() {
       lcd.print(" ");
       lcd.setCursor(7,1);
       lcd.write(0);
+      beep();
       delay(500);
-      menuTemp = 2;         
+      menuTemp = 2; 
+      
     }
     if(btnDown == 0){
       lcd.setCursor(0,1);
       lcd.write(0);
       lcd.setCursor(7,1);
       lcd.print(" ");    
+      beep();
       delay(500);   
       menuTemp = 1;
+      
     }
     if(btnOk == 0){
+      beep();
       delay(500);
       menu = menuTemp;
       lcd.clear();
@@ -86,6 +95,7 @@ void loop() {
     btnDown = digitalRead(tombol2);
     btnOk = digitalRead(tombol3);   
     if(btnUp == 0){
+      beep();
       if(j == n-1){
         lcd.setCursor(0,0);
         lcd.print("                ");
@@ -101,6 +111,7 @@ void loop() {
       }
     }
     if(btnDown == 0){
+      beep();
       if(j <= 0){
         lcd.setCursor(0,0);
         lcd.print("                ");
@@ -116,6 +127,7 @@ void loop() {
       }
     }
     if(btnOk == 0){
+      beep();
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Status : ");
@@ -123,12 +135,14 @@ void loop() {
       if(isThere[j] == 0){
         lcd.setCursor(0,1);
         lcd.print("Bisa Masuk");
+        digitalWrite(loker[j], LOW);
         delay(1000);
         lcd.clear();
         bool out = 0;
         uint8_t msg = 1;
         while(out == 0){
           btnOk = digitalRead(tombol3); 
+          
           unsigned long currentMillis = millis();
           if (currentMillis - previousMillis >= interval) {
             previousMillis = currentMillis;
@@ -143,6 +157,7 @@ void loop() {
               lcd.print("Loker nomor : ");
               lcd.setCursor(14,1);
               lcd.print(j+1);
+              digitalWrite(buzzer, HIGH);
             } else {
               msg = 1;
               lcd.clear();
@@ -150,9 +165,12 @@ void loop() {
               lcd.print("Tekan OK untuk");
               lcd.setCursor(0,1);
               lcd.print("mengunci loker.");
+              digitalWrite(buzzer, LOW);
             }
           }
           if(btnOk == 0){
+            digitalWrite(buzzer, LOW);
+            digitalWrite(loker[j], HIGH);
             delay(500);
             out = 1;
           }
@@ -272,13 +290,16 @@ void loop() {
                   lcd.setCursor(0,1);
                   lcd.print(names[result.ID-1]);
                   isThere[result.ID-1] = 0;
+                  beep();
                   delay(2000);
+                  digitalWrite(loker[result.ID-1], LOW);  //Membuka loker pada array penerima
                   lcd.clear();
                   lcd.setCursor(0,0);
                   lcd.print("Silakan ambil");
                   lcd.setCursor(0,1);
                   lcd.print("                ");
-                  delay(2000);
+                  delay(4000);
+                  digitalWrite(loker[result.ID-1], HIGH); //Menutup loker pada array penerima
                   lcd.clear();   
                   face = 0;
                   menu = 0;
@@ -297,4 +318,10 @@ void loop() {
         }
       }
     }
+}
+
+void beep(){
+  digitalWrite(buzzer, HIGH);
+  delay(50);
+  digitalWrite(buzzer, LOW);
 }
